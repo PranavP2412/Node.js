@@ -1,5 +1,5 @@
 const { drizzle } = require('drizzle-orm/node-postgres')
 
-const db = drizzle("postgres://postgres:Pranav@localhost:5432/mydb")
+const db = drizzle(process.env.DATABASE_URL)
 
 module.exports = db;

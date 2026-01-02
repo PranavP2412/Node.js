@@ -11,6 +11,3 @@ export const userTable = pgTable("users", {
   email: varchar('email', { length: 255 }).notNull().unique(),
 });
 
-module.exports = {
-    userTable
-}
