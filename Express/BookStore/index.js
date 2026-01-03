@@ -1,7 +1,6 @@
 require('dotenv/config')
 
 const express = require('express')
-const fs = require('fs')
 const bookRouter = require('./routes/book.routes')
 
 const app = express()

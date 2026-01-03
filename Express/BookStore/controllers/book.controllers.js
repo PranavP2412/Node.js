@@ -1,12 +1,16 @@
-const {books} = require('../models/books')
+const booksTable = require('../models/book.model')
+const db = require('../db/index')
+const {eq} = require('drizzle-orm')
 
-exports.getAllBooks = function(req,res){
-    res.json(books);
+
+exports.getAllBooks = async function(req,res){
+    const result = await db.select().from(booksTable)
+    return res.json(result)
 }
 
-exports.getBooksByID = function (req,res){
-    const id = parseInt(req.params.id);
-    const response = books.find((e) => e.id === id)
+exports.getBooksByID = async function (req,res){
+    const id = req.params.id;
+    const [book] = db.select().from(booksTable).where((table) => eq(table.id,id) ).limit(1); 
     if(!response){
         res.status(404).send("No book available with this id")
     }else{
@@ -14,17 +18,30 @@ exports.getBooksByID = function (req,res){
     }
 }
 
-exports.enterBook = function (req,res){
-    const {id,title,author} = req.body;
-    if(!title || !author){
+exports.enterBook = async function (req,res){
+    const {title,description,authorID} = req.body;
+    if(!title){
         return res.status(400).send("something is missing in the data")
     }
-    books.push({id:id, title:title, author:author})
-    res.send(books)
+    const [result] = await db.insert().values({
+        title,
+        description,
+        authorID
+    }).returning({
+        id: booksTable.id
+    })
+    return res.status(201).json({
+        message:"book created",
+        id:result.id
+    })
 }
 
-exports.deleteBookByID = function (req,res){
+exports.deleteBookByID = async function (req,res){
     const id = req.params.id
-    books.splice(id,1)
-    res.send(books)
+    const result =  await db.delete(booksTable).where(eq(booksTable.id,id)).returning({
+        id:booksTable.id
+    })
+    res.status(200).json({
+        message:"Book deleted"
+    })
 }
