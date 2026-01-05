@@ -3,6 +3,7 @@ import db from '../db/index.js';
 import {usersTable, userSession} from '../db/schema.js'
 import { eq } from 'drizzle-orm';
 import {randomBytes,createHmac} from 'node:crypto'
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -65,6 +66,7 @@ router.post("/login", async (req, res) => {
     const [existingUser] = await db
     .select({
         id: usersTable.id,
+        name:usersTable.name,
         email: usersTable.email,
         salt:usersTable.salt,
         password:usersTable.password
@@ -82,14 +84,15 @@ router.post("/login", async (req, res) => {
     if (existingHash !== newHash) {
         return res.json({ error: "Incorrect password!!" });
     }
+    const payload = {
+        id:existingUser.id,
+        name:existingUser.name,
+        email:existingUser.email
+    }
 
-    const [session] = await db.insert(userSession).values({
-        userID: existingUser.id
-    }).returning({
-        id:userSession.id
-    })
+    const token = jwt.sign(payload,process.env.JWT_SECRET);
 
-    return res.json({ message: "User successfully logined", sessionID: session.id });
+    return res.json({ message: "User successfully logined", token });
 });
 
 export default router;
